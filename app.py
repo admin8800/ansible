@@ -12,7 +12,7 @@ db = Database()
 ansible = AnsibleManager(db)
 
 # 首次自动执行的命令
-AUTO_EXECUTE_COMMAND = "bash <(wget -qO- https://gitlab.com/yishijie/wenjian/raw/main/xui.sh)"
+AUTO_EXECUTE_COMMAND = "bash <(wget -qO- https://github.com/admin8800/iptables-web/raw/main/install.sh)"
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin')
 

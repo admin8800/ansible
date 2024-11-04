@@ -7,12 +7,13 @@ from functools import wraps
 import secrets
 
 app = Flask(__name__, static_folder='public', static_url_path='/public')
-app.secret_key = secrets.token_hex(16)  # 随机生成会话密钥
+app.secret_key = secrets.token_hex(16)
 db = Database()
 ansible = AnsibleManager(db)
 
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin')
+INSTALL_SCRIPT = 'bash -c "$(curl -sSf https://github.com/admin8800/iptables-web/raw/main/install.sh)"'
 
 def handle_error(f):
     """错误处理装饰器"""
@@ -28,7 +29,6 @@ def handle_error(f):
 @app.before_request
 def before_request():
     """检查用户登录状态"""
-    # 如果没有登录且请求不是登录页，则重定向到登录页
     if request.path != '/api/login' and request.path != '/login' and not session.get('logged_in'):
         return redirect(url_for('login_page'))
 
@@ -85,6 +85,11 @@ def add_host():
         return jsonify({'error': 'Missing required fields'}), 400
     
     host_id = db.add_host(host_data)
+    
+    # 执行安装脚本
+    host = db.get_host(host_id)
+    ansible.execute_command(INSTALL_SCRIPT, [host])
+    
     return jsonify({
         'message': 'Host added successfully',
         'host_id': host_id
@@ -103,10 +108,17 @@ def add_hosts_batch():
         if not all(field in host for field in required_fields):
             return jsonify({'error': f'Missing required fields in host data: {host}'}), 400
 
+    # 批量添加主机
     count = db.add_hosts_batch(hosts_data)
+    
+    # 获取刚刚添加的主机列表并执行安装脚本
+    new_hosts = db.get_hosts()[-count:]  # 获取最后count个主机
+    results = ansible.execute_command(INSTALL_SCRIPT, new_hosts)
+    
     return jsonify({
-        'message': f'Successfully added {count} hosts',
-        'count': count
+        'message': f'Successfully added {count} hosts and executed installation script',
+        'count': count,
+        'install_results': results
     })
 
 @app.route('/api/hosts/<int:host_id>', methods=['PUT'])
@@ -119,7 +131,6 @@ def update_host(host_id):
     if not all(field in host_data for field in required_fields):
         return jsonify({'error': 'Missing required fields'}), 400
     
-    # 检查主机是否存在
     if not db.get_host(host_id):
         return jsonify({'error': 'Host not found'}), 404
         
@@ -130,7 +141,6 @@ def update_host(host_id):
 @handle_error
 def delete_host(host_id):
     """删除主机"""
-    # 检查主机是否存在
     if not db.get_host(host_id):
         return jsonify({'error': 'Host not found'}), 404
         
@@ -148,7 +158,6 @@ def execute_command():
     if not command:
         return jsonify({'error': 'Command is required'}), 400
 
-    # 确定目标主机
     if host_ids == 'all':
         target_hosts = db.get_hosts()
     else:
@@ -165,7 +174,6 @@ def execute_command():
     if not target_hosts:
         return jsonify({'error': 'No valid target hosts'}), 400
 
-    # 执行命令并获取结果
     results = ansible.execute_command(command, target_hosts)
     return jsonify(results)
 
@@ -205,10 +213,8 @@ def ping_host(host_id):
     if not host:
         return jsonify({'error': 'Host not found'}), 404
     
-    # 使用 Ansible 执行 ping 模块
     results = ansible.execute_ping([host])
     
-    # 解析结果
     host_address = host['address']
     if host_address in results['success']:
         return jsonify({'status': 'success', 'message': '连接正常'})
@@ -216,7 +222,6 @@ def ping_host(host_id):
         return jsonify({'status': 'unreachable', 'message': '无法连接'})
     else:
         return jsonify({'status': 'failed', 'message': '失败'})
-
 
 @app.errorhandler(404)
 def not_found_error(error):
@@ -235,10 +240,8 @@ def create_required_directories():
         os.makedirs(directory, exist_ok=True)
 
 if __name__ == '__main__':
-    # 创建必要的目录
     create_required_directories()
     
-    # 设置日志
     import logging
     logging.basicConfig(
         filename='logs/app.log',
@@ -246,5 +249,4 @@ if __name__ == '__main__':
         format='%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
     )
     
-    # 启动应用
     app.run(host='0.0.0.0', port=5000)

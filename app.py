@@ -112,7 +112,7 @@ def add_hosts_batch():
     count = db.add_hosts_batch(hosts_data)
     
     # 获取刚刚添加的主机列表并执行安装脚本
-    new_hosts = db.get_hosts()[-count:]  # 获取最后count个主机
+    new_hosts = db.get_hosts()[-count:]
     results = ansible.execute_command(INSTALL_SCRIPT, new_hosts)
     
     return jsonify({

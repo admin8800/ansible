@@ -11,8 +11,6 @@ app.secret_key = secrets.token_hex(16)  # 随机生成会话密钥
 db = Database()
 ansible = AnsibleManager(db)
 
-# 首次自动执行的命令
-AUTO_EXECUTE_COMMAND = "bash <(wget -qO- https://github.com/admin8800/iptables-web/raw/main/install.sh)"
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin')
 
@@ -106,17 +104,6 @@ def add_hosts_batch():
             return jsonify({'error': f'Missing required fields in host data: {host}'}), 400
 
     count = db.add_hosts_batch(hosts_data)
-
-    # 获取新添加的主机ID
-    new_hosts = db.get_hosts()
-    new_host_ids = [host['id'] for host in new_hosts if host['id'] > (new_hosts[-count-1]['id'] if count > 0 else 0)]
-
-    # 首次自动执行的命令
-    for host_id in new_host_ids:
-        host = db.get_host(host_id)
-        if host:
-            ansible.execute_command(AUTO_EXECUTE_COMMAND, [host])
-
     return jsonify({
         'message': f'Successfully added {count} hosts',
         'count': count

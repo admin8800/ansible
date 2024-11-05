@@ -1,5 +1,4 @@
 $(document).ready(function() {
-    // 加载主机列表（保持不变）
     function loadHosts() {
         $.get('/api/hosts', function(data) {
             $('#hostTable tbody').empty();
@@ -29,13 +28,12 @@ $(document).ready(function() {
         });
     }
 
-    // 简单的格式验证
     function validateHostInput(input) {
         const lines = input.trim().split('\n');
         const errors = [];
         
         lines.forEach((line, index) => {
-            if (line.trim() === '') return; // 跳过空行
+            if (line.trim() === '') return;
             const parts = line.trim().split(/\s+/);
             if (parts.length !== 5) {
                 errors.push(`第${index + 1}行：需要5个参数（备注 地址 用户名 端口 密码），实际得到${parts.length}个参数`);
@@ -48,7 +46,6 @@ $(document).ready(function() {
         };
     }
 
-    // 批量添加主机
     $('#addHosts').click(function() {
         const inputText = $('#batchInput').val();
         if (!inputText.trim()) {
@@ -56,7 +53,6 @@ $(document).ready(function() {
             return;
         }
 
-        // 验证输入格式
         const validation = validateHostInput(inputText);
         if (!validation.isValid) {
             validation.errors.forEach(error => {
@@ -65,7 +61,6 @@ $(document).ready(function() {
             return;
         }
 
-        // 禁用按钮并更改文字
         const $addButton = $('#addHosts');
         $addButton.prop('disabled', true).text('添加中');
 
@@ -94,8 +89,6 @@ $(document).ready(function() {
         });
     });
 
-    // 以下代码保持不变...
-    // 删除主机
     $(document).on('click', '.delete-host', function() {
         const hostId = $(this).data('id');
         if (confirm('确定要删除这台主机吗？')) {
@@ -113,7 +106,6 @@ $(document).ready(function() {
         }
     });
 
-    // 编辑主机
     $(document).on('click', '.edit-host', function() {
         const hostId = $(this).data('id');
         $.get('/api/hosts/' + hostId, function(host) {
@@ -127,7 +119,6 @@ $(document).ready(function() {
         });
     });
 
-    // 保存主机编辑
     $('#saveHostEdit').click(function() {
         const hostData = {
             id: $('#editHostId').val(),
@@ -154,7 +145,6 @@ $(document).ready(function() {
         });
     });
 
-    // 连接到主机（改为连通性测试）
     $(document).on('click', '.check-host', function() {
         const hostId = $(this).data('id');
         const statusSpan = $(`#health-${hostId}`);
@@ -183,7 +173,6 @@ $(document).ready(function() {
         });
     });
 
-    // 发送命令
     $('#sendSingle').click(function() {
         const command = $('#commandInput').val();
         const selectedHosts = $('#hostSelect').val();
@@ -197,12 +186,10 @@ $(document).ready(function() {
             return;
         }
 
-        // 禁用按钮
         $('#sendSingle').prop('disabled', true);
         $('#sendAll').prop('disabled', true);
 
         executeCommand(command, selectedHosts).always(function() {
-            // 恢复按钮
             $('#sendSingle').prop('disabled', false);
             $('#sendAll').prop('disabled', false);
         });
@@ -215,12 +202,10 @@ $(document).ready(function() {
             return;
         }
 
-        // 禁用按钮
         $('#sendSingle').prop('disabled', true);
         $('#sendAll').prop('disabled', true);
 
         executeCommand(command, 'all').always(function() {
-            // 恢复按钮
             $('#sendSingle').prop('disabled', false);
             $('#sendAll').prop('disabled', false);
         });
@@ -253,6 +238,5 @@ $(document).ready(function() {
         logContainer.scrollTop(logContainer[0].scrollHeight);
     }
 
-    // 初始加载
     loadHosts();
 });

@@ -1,12 +1,11 @@
 $(document).ready(function() {
-    // 加载主机列表
+    // 加载主机列表（保持不变）
     function loadHosts() {
         $.get('/api/hosts', function(data) {
             $('#hostTable tbody').empty();
             $('#hostSelect').empty();
             
             data.forEach(function(host) {
-                // 添加到主机表格
                 $('#hostTable tbody').append(`
                     <tr>
                         <td>${host.comment}</td>
@@ -23,7 +22,6 @@ $(document).ready(function() {
                     </tr>
                 `);
                 
-                // 添加到选择框
                 $('#hostSelect').append(`
                     <option value="${host.id}">${host.comment} (${host.address})</option>
                 `);
@@ -31,14 +29,48 @@ $(document).ready(function() {
         });
     }
 
+    // 简单的格式验证
+    function validateHostInput(input) {
+        const lines = input.trim().split('\n');
+        const errors = [];
+        
+        lines.forEach((line, index) => {
+            if (line.trim() === '') return; // 跳过空行
+            const parts = line.trim().split(/\s+/);
+            if (parts.length !== 5) {
+                errors.push(`第${index + 1}行：需要5个参数（备注 地址 用户名 端口 密码），实际得到${parts.length}个参数`);
+            }
+        });
+        
+        return {
+            isValid: errors.length === 0,
+            errors: errors
+        };
+    }
+
     // 批量添加主机
     $('#addHosts').click(function() {
+        const inputText = $('#batchInput').val();
+        if (!inputText.trim()) {
+            addLog('请输入主机信息', 'error');
+            return;
+        }
+
+        // 验证输入格式
+        const validation = validateHostInput(inputText);
+        if (!validation.isValid) {
+            validation.errors.forEach(error => {
+                addLog(error, 'error');
+            });
+            return;
+        }
+
         // 禁用按钮并更改文字
         const $addButton = $('#addHosts');
         $addButton.prop('disabled', true).text('添加中');
 
-        const hostsData = $('#batchInput').val().split('\n').map(line => {
-            const [comment, address, username, port, password] = line.trim().split(' ');
+        const hostsData = inputText.split('\n').map(line => {
+            const [comment, address, username, port, password] = line.trim().split(/\s+/);
             return { comment, address, username, port, password };
         }).filter(host => host.address);
 
@@ -62,6 +94,7 @@ $(document).ready(function() {
         });
     });
 
+    // 以下代码保持不变...
     // 删除主机
     $(document).on('click', '.delete-host', function() {
         const hostId = $(this).data('id');

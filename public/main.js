@@ -33,6 +33,10 @@ $(document).ready(function() {
 
     // 批量添加主机
     $('#addHosts').click(function() {
+        // 禁用按钮并更改文字
+        const $addButton = $('#addHosts');
+        $addButton.prop('disabled', true).text('添加中');
+
         const hostsData = $('#batchInput').val().split('\n').map(line => {
             const [comment, address, username, port, password] = line.trim().split(' ');
             return { comment, address, username, port, password };
@@ -50,6 +54,10 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 addLog('添加主机失败: ' + xhr.responseText, 'error');
+            },
+            complete: function() {
+                // 恢复按钮状态和文字
+                $addButton.prop('disabled', false).text('添加主机');
             }
         });
     });
@@ -113,34 +121,34 @@ $(document).ready(function() {
         });
     });
 
-     // 连接到主机（改为连通性测试）
-	$(document).on('click', '.check-host', function() {
-	    const hostId = $(this).data('id');
-	    const statusSpan = $(`#health-${hostId}`);
-	    
-	    statusSpan.text(' 检查中...');
-	    
-	    $.ajax({
-	        url: `/api/hosts/${hostId}/ping`,
-	        method: 'GET',
-	        success: function(response) {
-	            if (response.status === 'success') {
-	                statusSpan.text(' 连接正常');
-	                statusSpan.css('color', 'green');
-	            } else if (response.status === 'unreachable') {
-	                statusSpan.text(' 无法连接');
-	                statusSpan.css('color', 'red');
-	            } else {
-	                statusSpan.text(' 失败');
-	                statusSpan.css('color', 'orange');
-	            }
-	        },
-	        error: function() {
-	            statusSpan.text(' 检查失败');
-	            statusSpan.css('color', 'red');
-	        }
-	    });
-	});
+    // 连接到主机（改为连通性测试）
+    $(document).on('click', '.check-host', function() {
+        const hostId = $(this).data('id');
+        const statusSpan = $(`#health-${hostId}`);
+        
+        statusSpan.text(' 检查中...');
+        
+        $.ajax({
+            url: `/api/hosts/${hostId}/ping`,
+            method: 'GET',
+            success: function(response) {
+                if (response.status === 'success') {
+                    statusSpan.text(' 连接正常');
+                    statusSpan.css('color', 'green');
+                } else if (response.status === 'unreachable') {
+                    statusSpan.text(' 无法连接');
+                    statusSpan.css('color', 'red');
+                } else {
+                    statusSpan.text(' 失败');
+                    statusSpan.css('color', 'orange');
+                }
+            },
+            error: function() {
+                statusSpan.text(' 检查失败');
+                statusSpan.css('color', 'red');
+            }
+        });
+    });
 
     // 发送命令
     $('#sendSingle').click(function() {

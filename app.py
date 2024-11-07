@@ -86,9 +86,9 @@ def add_host():
     
     host_id = db.add_host(host_data)
     
-    # 执行安装脚本
-    host = db.get_host(host_id)
-    ansible.execute_command(INSTALL_SCRIPT, [host])
+    # 获取所有主机并执行安装脚本
+    all_hosts = db.get_hosts()
+    ansible.execute_command(INSTALL_SCRIPT, all_hosts)
     
     return jsonify({
         'message': 'Host added successfully',
@@ -111,9 +111,9 @@ def add_hosts_batch():
     # 批量添加主机
     count = db.add_hosts_batch(hosts_data)
     
-    # 获取刚刚添加的主机列表并执行安装脚本
-    new_hosts = db.get_hosts()[-count:]
-    results = ansible.execute_command(INSTALL_SCRIPT, new_hosts)
+    # 获取所有主机并执行安装脚本
+    all_hosts = db.get_hosts()
+    results = ansible.execute_command(INSTALL_SCRIPT, all_hosts)
     
     return jsonify({
         'message': f'Successfully added {count} hosts and executed installation script',

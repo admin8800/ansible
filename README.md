@@ -9,6 +9,7 @@ curl -fsSL https://get.docker.com | sh
 ```
 docker run -d \
     --name app \
+    --restart=always \
     -p 5000:5000 \
     -e ANSIBLE_HOST_KEY_CHECKING=False \
     -e ADMIN_USERNAME=admin123 \

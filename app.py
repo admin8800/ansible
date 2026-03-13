@@ -13,8 +13,7 @@ ansible = AnsibleManager(db)
 
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
-SCRIPT_PASSWORD = os.getenv('SCRIPT_PASSWORD', 'admin123')
-INSTALL_SCRIPT = f'wget --no-check-certificate https://github.com/admin8800/iptables-web/raw/main/install.sh && chmod +x install.sh && ./install.sh "{SCRIPT_PASSWORD}"'
+INSTALL_SCRIPT = f'wget --no-check-certificate https://github.com/admin8800/iptables-web/raw/main/install.sh && chmod +x install.sh && ./install.sh'
 
 def handle_error(f):
     """错误处理装饰器"""

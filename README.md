@@ -14,7 +14,6 @@ docker run -d \
     -e ANSIBLE_HOST_KEY_CHECKING=False \
     -e ADMIN_USERNAME=admin \
     -e ADMIN_PASSWORD=admin123 \
-    -e SCRIPT_PASSWORD=admin123 \
     -v ./db:/app/db \
     ghcr.io/admin8800/ansible
 ```

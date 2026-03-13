@@ -7,6 +7,5 @@ services:
       - ANSIBLE_HOST_KEY_CHECKING=False
       - ADMIN_USERNAME=admin
       - ADMIN_PASSWORD=admin123
-      - SCRIPT_PASSWORD=admin123
     volumes:
       - ./db:/app/db
